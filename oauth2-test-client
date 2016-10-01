@@ -1,0 +1,212 @@
+#!/bin/bash
+
+# HTTP BASIC AUTH USER
+USER="dka"
+PASS="dka"
+# USER="user"
+# PASS="password"
+# AUTHORIZATION SERVER
+REDIRECT_URI="http://localhost:8080/"
+AUTHORIZATION_SERVER="http://localhost:8080/oauth"
+
+# AUTHORIZATION CODE GRANT CONF
+AUTHORIZATION_CODE_CLIENT_ID="backoffice"
+
+# IMPLICIT GRANT CONF
+IMPLICIT_CODE_CLIENT_ID="backoffice-implicit"
+
+# COMMON CONF
+OPTION_FLOW=$1
+OPTION_REQUEST=$2
+
+echo "Welcome in OAuth bash utility by DKA"
+echo "They are 5 authantications flows"
+echo "Usage: $0 [flow] [request]"
+echo "List of available flow and requests:"
+echo "		- authorization_code"
+echo "			- authorization (lead to authorization response or error response)"
+echo "			- access_token (lead to access token response or error response)"
+echo "		- implicit"
+echo "			- authorization (lead to access token response or error response)"
+echo "		- resource_owner_password_credentials"
+echo "			- access_token (lead to access token response or error response)"
+echo "		- client_credentials"
+echo "			- access_token (lead to access token response or error response)"
+echo ""
+echo "Test all requests at once in order: $0 all"
+echo ""
+echo ""
+
+function errorFlowNotFound() {
+	echo "Error: The \"$OPTION_FLOW\" flow has not been found."
+	exit 1
+}
+
+function errorRequestNotfound() {
+	echo "Request \"$OPTION_REQUEST\" not found for \"$OPTION_FLOW\" flow."
+	exit 1
+}
+
+function all(){
+	authorizationCode_getAuthorization
+	authorizationCode_getAccessToken
+	implicit_getAuthorization
+	resource_owner_password_credentials_getAccessToken
+	client_credentials_getAccessToken
+}
+
+###
+##  Authorization code grant
+###
+
+function authorizationCode_getAuthorization(){
+	echo "[Grant: Authorization code][Request: authorization]"
+	CLIENT_ID=$AUTHORIZATION_CODE_CLIENT_ID
+	RESPONSE_TYPE="code"
+	REDIRECT_URI=$REDIRECT_URI
+	SCOPE=${SCOPE:-"read"}
+	STATE=${STATE:-"abc"}
+
+	METHOD="GET"
+	CONTENT_TYPE="application/json"
+	URL="$AUTHORIZATION_SERVER/authorize?response_type=$RESPONSE_TYPE&client_id=$CLIENT_ID&redirect_uri=$REDIRECT_URI&state=$STATE&scope=$SCOPE"
+	USER_CREDENTIAL="-u $USER:$PASS"
+	doRequest
+	printf "\n----------------------"
+}
+
+function authorizationCode_getAccessToken(){
+	echo "[Grant: Authorization code][Request: access token]"
+	[[ -z $CODE ]] && echo "Error: No code provided." && echo "Try by setting env CODE. eg:" && echo "CODE={code} $0 $OPTION_FLOW $OPTION_REQUEST"
+	GRANT_TYPE="authorization_code"
+	CODE=$CODE
+	REDIRECT_URI=$REDIRECT_URI
+
+	METHOD="POST"
+	CONTENT_TYPE="application/x-www-form-urlencoded"
+	URL="$AUTHORIZATION_SERVER/token?grant_type=$GRANT_TYPE&code=$CODE&redirect_uri=$REDIRECT_URI"
+	USER_CREDENTIAL="-u $USER:$PASS"
+	doRequest
+	printf "\n----------------------"
+}
+
+###
+##  Implicit code grant
+###
+
+function implicit_getAuthorization(){
+	echo "[Grant: Implicit][Request: authorization]"
+	CLIENT_ID=$IMPLICIT_CODE_CLIENT_ID
+	RESPONSE_TYPE="token"
+	REDIRECT_URI=$REDIRECT_URI
+	SCOPE=${SCOPE:-"read"}
+	STATE=${STATE:-"abc"}
+
+	METHOD="GET"
+	CONTENT_TYPE="application/json"
+	URL="$AUTHORIZATION_SERVER/authorize?response_type=$RESPONSE_TYPE&client_id=$CLIENT_ID&redirect_uri=$REDIRECT_URI&state=$STATE&scope=$SCOPE"
+	USER_CREDENTIAL="-u $USER:$PASS"
+	doRequest
+	printf "\n----------------------"
+}
+
+###
+##  Resource owner credential code grant
+###
+
+function resource_owner_password_credentials_getAccessToken(){
+	echo "[Grant: Resource owner password credentials][Request: access token]"
+	GRANT_TYPE="password"
+	USERNAME=$USER
+	PASSWORD=$PASS
+	SCOPE=${SCOPE:-"read"}
+
+	METHOD="POST"
+	CONTENT_TYPE="application/x-www-form-urlencoded"
+	URL="$AUTHORIZATION_SERVER/token?grant_type=$GRANT_TYPE&username=$USERNAME&password=$PASSWORD"
+	USER_CREDENTIAL="-u $USER:$PASS"
+	doRequest
+	printf "\n----------------------"
+}
+
+###
+##  Client credentials code grant
+###
+
+function client_credentials_getAccessToken(){
+	echo "[Grant: Client credentials][Request: access token]"
+	GRANT_TYPE="client_credentials"
+	SCOPE=${SCOPE:-"read"}
+
+	METHOD="POST"
+	CONTENT_TYPE="application/x-www-form-urlencoded"
+	URL="$AUTHORIZATION_SERVER/token?grant_type=$GRANT_TYPE"
+	USER_CREDENTIAL="-u $USER:$PASS"
+	doRequest
+	printf "\n----------------------"
+}
+
+###
+##  Requests
+###
+
+function doRequest(){
+	CURL="curl $OPTION_CURL $USER_CREDENTIAL -X $METHOD -H \"Content-Type: $CONTENT_TYPE\" \"$URL\""
+	echo "Request:"
+	echo "$CURL"
+	echo "Response:"
+	eval "$CURL"
+}
+
+case "$OPTION_FLOW" in
+	"authorization_code")
+		echo "$CLIENT_ID"
+		case "$OPTION_REQUEST" in
+			"authorization")
+				authorizationCode_getAuthorization
+			;;
+			"access_token")
+				authorizationCode_getAccessToken
+			;;
+			*)
+				errorRequestNotfound
+			;;
+		esac
+	;;
+	"implicit")
+		case "$OPTION_REQUEST" in
+			"authorization")
+				implicit_getAuthorization
+			;;
+			*)
+				errorRequestNotfound
+			;;
+		esac
+	;;
+	"resource_owner_password_credentials")
+		case "$OPTION_REQUEST" in
+			"access_token")
+				resource_owner_password_credentials_getAccessToken
+			;;
+			*)
+				errorRequestNotfound
+			;;
+		esac
+	;; 
+	"client_credentials")
+		case "$OPTION_REQUEST" in
+			"access_token")
+				client_credentials_getAccessToken
+			;;
+			*)
+				errorRequestNotfound
+			;;
+		esac
+	;;
+	"all")
+		all
+	;;
+	*)
+		errorFlowNotFound
+	;;
+esac
