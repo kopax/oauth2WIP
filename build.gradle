@@ -1,0 +1,159 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url 'http://repo.spring.io/plugins-release' }
+    }
+    dependencies {
+        classpath('org.springframework.boot:spring-boot-gradle-plugin:1.4.1.RELEASE')
+// tag::build[]
+        classpath('se.transmode.gradle:gradle-docker:1.2')
+// end::build[]
+        classpath('org.springframework.build.gradle:propdeps-plugin:0.0.7')
+    }
+
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'spring-boot'
+// tag::plugin[]
+apply plugin: 'docker'
+// end::plugin[]
+apply plugin: 'propdeps'
+apply plugin: 'propdeps-maven'
+apply plugin: 'propdeps-idea'
+apply plugin: 'propdeps-eclipse'
+
+// This is used as the docker image prefix (org)
+group = 'kopaxgroup'
+
+jar {
+    baseName = 'api'
+    version =  '0.1.0'
+}
+
+
+// tag::task[]
+task buildDocker(type: Docker, dependsOn: build) {
+  push = false // If true, image will be pushed to docker.io has group+'/'+jar.baseName+':'+jar.version
+  applicationName = jar.baseName
+  dockerfile = file('src/main/docker/Dockerfile')
+  doFirst {
+    copy {
+      from jar
+      into stageDir
+    }
+  }
+}
+// end::task[]
+
+repositories {
+    mavenCentral()
+    maven { url 'http://repo.spring.io/plugins-release' }
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+
+    // add git.properties
+    compile('pl.project13.maven:git-commit-id-plugin:2.2.1')
+
+    // data // TODO : used for tutorial spring react, if we decide not to keep it please remove this package
+    compile('org.springframework.boot:spring-boot-starter-data-rest')
+
+    // Migrate database
+    compile('org.flywaydb:flyway-core:4.0.3')
+
+    // Serialization with google gson
+    compile('com.google.code.gson:gson:2.7')
+
+    // Apache utils
+    compile('org.apache.commons:commons-lang3:3.4')
+
+    // Used for Date manipulation java
+    compile("joda-time:joda-time")
+    compile('com.fasterxml.jackson.datatype:jackson-datatype-joda:2.8.1')
+
+    // Used for MariaDB connection
+    compile("org.mariadb.jdbc:mariadb-java-client:1.5.2")
+
+    // Used for Java/MariaDB ORM
+    compile("org.mybatis:mybatis:3.4.1")
+    compile("org.mybatis:mybatis-spring:1.3.0")
+    compile("org.mybatis.spring.boot:mybatis-spring-boot-starter:1.1.1")
+
+    // Starter for using Spring Framework's caching support
+    // TODO: not tested yet
+    compile("org.springframework.boot:spring-boot-starter-cache")
+
+    // Starter for using Elasticsearch search and analytics engine and Spring Data Elasticsearch
+    // TODO: not tested yet
+//    compile("org.springframework.boot:spring-boot-starter-data-elasticsearch")
+
+    // Starter for using Java Mail and Spring Framework's email sending support
+    // TODO: not tested yet
+    compile("org.springframework.boot:spring-boot-starter-mail")
+
+    // --------------
+    // ---SECURITY---
+    // --------------
+    // Starter for using Spring Security
+    compile("org.springframework.boot:spring-boot-starter-security")
+
+    // Spring LDAP is a Java library for simplifying LDAP operations, based on the pattern of Spring's JdbcTemplate.
+//    compile("org.springframework.security:spring-security-ldap")
+    // TODO: define
+//    compile("org.springframework:spring-tx")
+
+    // Modules for providing OAuth2 support to Spring Security
+    compile('org.springframework.security.oauth:spring-security-oauth2:2.0.11.RELEASE')
+    compile('org.apache.commons:commons-lang3:3.4')
+    compile('org.springframework.security:spring-security-jwt:1.0.5.RELEASE')
+
+    // TODO: define
+    testCompile("org.springframework.security:spring-security-test")
+
+    // TODO: define
+    compile("org.apache.directory.server:apacheds-server-jndi:1.5.5")
+
+
+
+    // Create REST representations that follow the HATEOAS principle
+    compile('org.springframework.hateoas:spring-hateoas:0.20.0.RELEASE')
+    compile("org.springframework.boot:spring-boot-starter-hateoas")
+    testCompile("com.jayway.jsonpath:json-path")
+
+
+    // Starter for using Spring Boot's Actuator which provides production ready features to help you monitor and manage your application
+    // NOTE: tested the 2016-09-13 with 1.4.0:RELEASE, starter as errors , see #5984
+    // TODO: retest with futur release
+    compile("org.springframework.boot:spring-boot-starter-actuator")
+
+    // Stater for logging using Logback. Default logging starter
+    // TODO: not tested yet
+//    compile("org.springframework.boot:spring-boot-starter-logging")
+
+    // Starter for building web, including RESTful, applications using Spring MVC. Uses Tomcat as the default embedded container
+    compile("org.springframework.boot:spring-boot-starter-web")
+
+    // Starter for testing Spring Boot applications with libraries including JUnit, Hamcrest and Mockito
+    testCompile("org.springframework.boot:spring-boot-starter-test")
+
+    // includes a Java annotation processor which is invoked as your project is compiled
+    optional("org.springframework.boot:spring-boot-configuration-processor")
+
+    // include dev-tools
+    optional('org.springframework.boot:spring-boot-devtools')
+}
+
+// ensure that resources are processed before code is compiled.
+// Without this directive any additional-spring-configuration-metadata.json files will not be processed.
+compileJava.dependsOn(processResources)
+
+// Wrapper configuration
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.3'
+}

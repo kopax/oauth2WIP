@@ -1,0 +1,26 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.persistence.SchemaVersionMapper">
+    <!-- If enable, it will execute all the requests within this file using "SELECT CACHE" -->
+    <cache />
+
+    <sql id="selectFrom">
+        SELECT
+            `installed_rank` as 'installedRank',
+            `version` as 'version',
+            `description` as 'description',
+            `type` as 'type',
+            `script` as 'script',
+            `checksum` as 'checksum',
+            `installed_by` as 'installedBy',
+            `installed_on` as 'installedOn',
+            `execution_time` as 'executionTime',
+            `success` as 'success'
+        FROM
+    </sql>
+
+    <select id="getSchemaVersionList" resultType="SchemaVersion">
+        <include refid="selectFrom"/>
+        schema_version
+    </select>
+
+</mapper>

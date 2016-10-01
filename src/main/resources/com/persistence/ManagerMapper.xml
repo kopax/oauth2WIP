@@ -1,0 +1,66 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.persistence.ManagerMapper">
+    <!-- If enable, it will execute all the requests within this file using "SELECT CACHE" -->
+    <!--<cache />-->
+
+    <sql id="getManagerSelect">
+        SELECT
+           manager.ID as 'id',
+           manager.LOGIN as 'login',
+           manager.PASSWORD as 'hash', <!-- This will use setHash(password) has setter so it doesn't get reencoded -->
+           manager.ROLES as 'roleList'
+    </sql>
+
+    <sql id="getManagerFrom">
+        FROM
+          `MANAGER` manager
+    </sql>
+
+    <select id="getByLogin" resultType="Manager" parameterType="String">
+        <include refid="getManagerSelect"/>
+        <include refid="getManagerFrom"/>
+        WHERE
+          manager.`LOGIN` = #{login}
+    </select>
+
+    <select id="getById" resultType="Manager" parameterType="Integer">
+        <include refid="getManagerSelect"/>
+        <include refid="getManagerFrom"/>
+        WHERE
+          manager.`ID` = #{id}
+    </select>
+
+    <select id="getAll" resultType="Manager">
+        <include refid="getManagerSelect"/>
+        <include refid="getManagerFrom"/>
+    </select>
+
+    <insert id="insert" parameterType="Manager" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO `MANAGER`
+          (`LOGIN`, `PASSWORD`, `ROLES`)
+        VALUES
+          (#{login}, #{password}, #{roleList})
+        <selectKey keyProperty="id" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+    </insert>
+
+    <update id="update" parameterType="Manager">
+        UPDATE
+          `MANAGER`
+        SET
+          `LOGIN` = #{login},
+          `PASSWORD` = #{password},
+          `ROLES` = #{roleList}
+        WHERE
+          `ID` = #{id}
+    </update>
+
+    <delete id="removeById" parameterType="Integer">
+        DELETE FROM
+          `MANAGER`
+        WHERE
+          `ID` = #{id}
+    </delete>
+
+</mapper>

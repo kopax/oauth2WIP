@@ -1,0 +1,18 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.persistence.ReferenceMapper">
+    <!-- If enable, it will execute all the requests within this file using "SELECT CACHE" -->
+    <cache />
+
+    <sql id="selectDBObjectFrom">
+      SELECT
+        ID as 'id',
+        DESCRIPTION as 'description'
+      FROM
+    </sql>
+
+    <select id="getTypeEmployeeList" resultType="DBObject">
+      <include refid="selectDBObjectFrom"/>
+      REF_TYPE_EMPLOYEE
+    </select>
+
+</mapper>

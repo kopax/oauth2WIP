@@ -1,0 +1,68 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.persistence.EmployeeMapper">
+    <!-- If enable, it will execute all the requests within this file using "SELECT CACHE" -->
+    <!--<cache />-->
+
+    <sql id="getEmployeeSelect">
+        SELECT
+          employee.ID as 'id',
+          employee.DESCRIPTION as 'description',
+          employee.FIRST_NAME as 'firstName',
+          employee.LAST_NAME as 'lastName',
+          employee.VERSION as 'version',
+          employee.MANAGER_ID as 'manager.id',
+          manager.LOGIN as 'manager.login',
+          manager.password as 'manager.password',
+          manager.roles as 'manager.roleList'
+    </sql>
+
+    <sql id="getEmployeeFrom">
+        FROM
+          `EMPLOYEE` employee
+        INNER JOIN
+          `MANAGER` manager on ( employee.MANAGER_ID = manager.ID )
+    </sql>
+
+    <select id="getById" resultType="Employee" parameterType="Integer">
+        <include refid="getEmployeeSelect"/>
+        <include refid="getEmployeeFrom"/>
+        WHERE
+          employee.ID = #{id}
+    </select>
+
+    <select id="getAll" resultType="Employee">
+        <include refid="getEmployeeSelect"/>
+        <include refid="getEmployeeFrom"/>
+    </select>
+
+    <insert id="insert" parameterType="Employee" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        INSERT INTO
+          `EMPLOYEE` (DESCRIPTION, FIRST_NAME, LAST_NAME, VERSION, MANAGER_ID)
+        VALUES
+          (#{description}, #{firstName}, #{lastName}, 1, #{manager.id})
+        <selectKey keyProperty="id" resultType="Integer" order="AFTER">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+    </insert>
+
+    <update id="update" parameterType="Employee">
+        UPDATE
+          `EMPLOYEE`
+        SET
+          DESCRIPTION = #{description},
+          FIRST_NAME = #{firstName},
+          LAST_NAME = #{lastName},
+          VERSION = #{version},
+          MANAGER_ID = #{manager.id}
+        WHERE
+          ID = #{id}
+    </update>
+
+    <delete id="removeById" parameterType="Integer">
+        DELETE FROM
+          `EMPLOYEE`
+        WHERE
+          ID = #{id}
+    </delete>
+
+</mapper>

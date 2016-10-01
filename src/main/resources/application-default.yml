@@ -1,0 +1,64 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api
+  datasource:
+    DATA_V1:
+      version: 0.0.2
+      url: jdbc:mariadb://dev:31740/DATA_V1?autoReconnect=true&useUnicode=true&connectionCollation=utf8_general_ci&characterSetResults=utf8&characterEncoding=UTF-8
+      username: backoffice
+      password: backoffice
+      driver-class-name: org.mariadb.jdbc.Driver
+      minIdle: 0
+      maxIdle: 10
+      maxActive: 50
+      maxWait: 6000
+      testOnBorrow: true
+      validationQuery: SELECT 1
+      timeBetweenEvictionRunsMillis: 1800000
+      numTestsPerEvictionRun: 50
+      minEvictableIdleTimeMillis: 10
+      testWhileIdle: true
+  devtools:
+    remote:
+      restart:
+        enabled: true
+
+
+#security:
+#  user:
+#    name: admin
+#    password: secret
+#
+#management:
+#  port: 8080
+#  address: 127.0.0.1
+#  context-path: /manage
+#  security:
+#    enabled: true
+#    roles: SUPERUSER
+
+endpoints:
+#  cors:
+#    allowed-origins: http://localhost
+#    allowed-methods: GET,POST
+  health:
+    sensitive: false
+  restart:
+    enabled: true
+  shutdown:
+    enabled: true
+
+logging:
+  pattern:
+    console: "%msg%n"
+  level:
+    com: INFO
+    org.springframework.web: INFO
+    guru.springframework.controllers: INFO
+    org.hibernate: INFO
+
+ribbon:
+  ServerListRefreshInterval: 1000
